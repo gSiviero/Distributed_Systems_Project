@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "outDir": "lib",
+        "rootDir": ".",
+        "target": "es5",
+        "module": "commonjs",
+        "declaration": true,
+        "stripInternal": true,
+        "types": [
+        ]
+    }
+}
