@@ -6,7 +6,8 @@
         "module": "commonjs",
         "declaration": true,
         "stripInternal": true,
-        "types": [
-        ]
+        "moduleResolution":"Node",
+        "resolveJsonModule": true,
+        "types": ["node"]
     }
 }

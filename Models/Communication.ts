@@ -1,41 +1,58 @@
 
-// var events = require('events');
+import { TypedEmitter } from 'tiny-typed-emitter';
+import { Md5 } from 'ts-md5';
+import { SiteI } from './Site';
+import { UDP } from './UDP';
 
-// exports.UDPUtils = class UDPUtils extends events.EventEmitter{
-//   constructor(object) {
-//     super();
-//     var self = this;
-//     this.listen = object.listen;
-//     this.broadcast = object.broadcast;
-//     var dgram = require("dgram");
-//     var server = dgram.createSocket("udp4");
+export interface CommunicationI{
+    broadcast(message:MessageI):void;
+    unicast(site:SiteI):void;
+    multicast(site:SiteI[]):void;
+}
 
-//     server.bind(() => server.setBroadcast(true));
-//     var client = dgram.createSocket("udp4");
-//     client.bind(this.listen);
-//     client.on("listening", () => 
-//       console.log("UDP Client listening on " + object.listen)
-//     );
+export interface CommunicationEventsI{
+    'message': (message:MessageI) => void;
+    'listening': () => void;
+}
 
-//     this.client = client;
-//     this.server = server;
+export class Communication extends TypedEmitter<CommunicationEventsI> implements CommunicationI {
+    udp:UDP;
+    constructor(listenOnPort:number,possiblePorts:number[]){
+        console.log(listenOnPort);
+        super();
+        this.udp = new UDP(listenOnPort,possiblePorts);
+        this.udp.on("listening",() => this.emit("listening"));
+        this.udp.on("message",(m) => this.emit("message",JSON.parse(m.toString())));
+    }
+    unicast(site: SiteI): void {
+        throw new Error('Method not implemented.');
+    }
+    multicast(site: SiteI[]): void {
+        throw new Error('Method not implemented.');
+    }
+    'message': (message: MessageI) => void;
 
-//     this.client.on("listening", function () {
-//       client.setBroadcast(true);
-//     });
+    broadcast(message:MessageI){
+        this.udp.broadCast(message);
+    }
+}
+export interface MessageI{
+    hash:string;
+    sender:SiteI;
+    topic: string;
+    payload:string;
+}
 
-//     this.client.on("message", function (message, rinfo) {
-//       var msg = JSON.parse(message);
-//       console.log(`${msg.sender} - ${msg.timeStamp} : ${msg.topic}`);
-//       self.emit(msg.topic,msg.payload);
-//     });
-//   }
-
-//   UDPbroadCast(text) {
-//     var BROADCAST_ADDR = "255.255.255.255";
-//     var message = Buffer.from(text);
-//     this.broadcast.forEach((port) => {
-//       this.server.send(message, 0, message.length, port, BROADCAST_ADDR);
-//     });
-//   }
-// };
+export class Message implements MessageI{
+    hash: string;
+    sender: SiteI;
+    topic: string;
+    payload: string;
+    
+    constructor(sender:SiteI,topic:string,payload:string ){
+        this.sender = sender;
+        this.topic = topic;
+        this.payload = payload;
+        this.hash = Md5.hashStr(JSON.stringify(this));
+    }
+}

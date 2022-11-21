@@ -1,6 +1,8 @@
 import {Md5} from 'ts-md5';
 import { Base } from './Base';
+import { Communication } from './Communication';
 import { FingerTable } from './FingerTable';
+import * as config from "../systemConfig.json";
 
 
 export interface SiteI{
@@ -21,6 +23,8 @@ export class Site extends Base implements SiteI {
     timeStamp:number;
     /**Is this site leader? */
     leader:false;
+
+    communication:Communication;
     
     constructor (ip:string,port:number){
         super();
@@ -39,5 +43,6 @@ export class SelfSite extends Site{
     constructor(ip:string,port:number){
         super(ip,port);
         this.fingerTable = new FingerTable(1);
+        this.communication = new Communication(port??config.port,config.possiblePorts);
     }
 }

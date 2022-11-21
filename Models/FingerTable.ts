@@ -5,7 +5,7 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 /**Event Interface
  * This is where all possible event types are defined.
  */
-interface FingerTableEvents {
+interface FingerTableEventsI {
     'failure': (el:SiteI[]) => void;
     'ready': () => void;
   }
@@ -38,7 +38,7 @@ export class FingerTableSite extends Base implements SiteI {
 }
 
 /**Finger Table implementation */
-export class FingerTable extends TypedEmitter<FingerTableEvents>{
+export class FingerTable extends TypedEmitter<FingerTableEventsI>{
     /**Array of entries in the Finger table */
     private entries:FingerTableSite[];
     /**Constructor
