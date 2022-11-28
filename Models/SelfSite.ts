@@ -114,8 +114,7 @@ export class SelfSite extends Site implements SelfSiteI {
     setInterval(() => {
       this.timeStamp += 1;
       this.checkLeader();
-      // this.gossip(MessageFactory.HeartBeatMessage(this));
-      this.communication.broadcast(MessageFactory.HeartBeatMessage(this));
+      this.gossip(MessageFactory.HeartBeatMessage(this));
       this.fingerTable.upsertEntry(this);
     }, config.heartBeatInterval);
 
