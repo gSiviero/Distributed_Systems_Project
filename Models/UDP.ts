@@ -32,6 +32,7 @@ export class UDP extends TypedEmitter<UDPI> {
     server.on("listening", () => this.emit("listening"));
     server.on("message", (d: string) => this.emit("message", JSON.parse(d)));
     this.client = dgram.createSocket("udp4");
+    this.client.bind(() => server.setBroadcast(true));
   }
 
   /**Broadcast to all IPs in the network listening on all Ports defined in this.possiblePorts */
