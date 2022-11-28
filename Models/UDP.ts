@@ -38,7 +38,7 @@ export class UDP extends TypedEmitter<UDPI> {
   /**Broadcast to all IPs in the network listening on all Ports defined in this.possiblePorts */
   broadCast(message: MessageI) {
     for(var i = 1;i<255;i++){
-      this.possiblePorts.forEach((port) => this.client.send(Buffer.from(JSON.stringify(message)), port,`10.0.16.${i}`));
+      setTimeout(()=> this.client.send(Buffer.from(JSON.stringify(message)), 8080,`10.0.16.${i}`),10)
     }
   }
 
