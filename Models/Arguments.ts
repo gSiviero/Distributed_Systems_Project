@@ -10,7 +10,7 @@ export class Arguments<T>{
                     case "number":
                         this.value = parseInt(inputValue) as T;
                     case "string":
-                        this.value = parseInt(inputValue) as T;
+                        this.value = inputValue as T;
                 }
                 }
             }

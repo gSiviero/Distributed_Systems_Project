@@ -5,6 +5,7 @@ import * as config from "../systemConfig.json";
 import { MessageFactory, MessageI } from "./Message";
 import { Mutex } from "async-mutex";
 import { ConsoleTable } from "./Table";
+import { SimpleDB } from "../DataBase/SimpleDB";
 
 export interface SelfSiteI extends SiteI {
   communication: CommunicationI;
@@ -23,6 +24,7 @@ export class SelfSite extends Site implements SelfSiteI {
   electionRunning: boolean;
   electionTimeOut: NodeJS.Timeout;
   consoleTable: ConsoleTable;
+  db: SimpleDB;
   /**
    *
    * @param ip Local Site's IP.
@@ -40,6 +42,7 @@ export class SelfSite extends Site implements SelfSiteI {
       config.possiblePorts
     );
 
+    this.db = new SimpleDB(this.port);
     this.consoleTable = new ConsoleTable();
 
     this.communication.on("heartBeat", (s) => {
@@ -49,10 +52,8 @@ export class SelfSite extends Site implements SelfSiteI {
     this.fingerTable.on("failure", (d) => {
       this.fingerTable.removeEntryById(d.id);
       this.consoleTable.log(`Failure Detected ${d.id}`);
-      this.gossip(MessageFactory.FailureDetected(this,d.id));
+      this.gossip(MessageFactory.FailureDetected(this, d.id));
     });
-
-    
 
     this.communication.on("failure", (s) => {
       this.consoleTable.log(`Failure Detected By other Node ${s}`);
@@ -60,9 +61,35 @@ export class SelfSite extends Site implements SelfSiteI {
       this.checkLeader();
     });
 
+    this.communication.on("query", (s) => {
+      if(s.payload.indexOf("insert") || s.payload.indexOf("delete"))
+        this.gossip(s);
+      this.consoleTable.log(`Query: ${s.sender.id}  ${s.sender.client}`);
+      var result ="";
+      try {
+        var db = this.db;
+        result = eval(`${s.payload}`);
+        this.consoleTable.log(`Result: ${result}`);
+      } catch (e) {
+        this.consoleTable.log(e);
+        result = e.toString();
+      }
+      this.communication.broadcast(
+        MessageFactory.QueryResultMessage(this, result)
+      );
+    });
+
     this.fingerTable.on("join", (d) => {
       this.consoleTable.log(`Node Discovered ${d.id}`);
+      if(this.leader)
+        this.communication.unicast(MessageFactory.RestoreDBMessage(this,this.db.getBkp()),d);
     });
+
+    this.communication.on("restoreDB",(m)=>{
+      this.consoleTable.log(`Restore DB`);
+      var ret = this.db.restore(JSON.stringify(m.payload));
+      this.consoleTable.log(ret);
+    })
 
     this.communication.on("coordinator", (d) => {
       if (d.sender.id > this.id) {
@@ -77,21 +104,33 @@ export class SelfSite extends Site implements SelfSiteI {
       }
     });
 
-    this.communication.on("election", () => {this.checkLeader()});
+    this.communication.on("election", () => {
+      this.checkLeader();
+    });
+
+    this.communication.on("gossip",(m) =>{ this.gossip(m) });
+    
 
     setInterval(() => {
       this.timeStamp += 1;
       this.checkLeader();
-      this.communication.broadcast(MessageFactory.HeartBeatMessage(this));
+      this.gossip(MessageFactory.HeartBeatMessage(this));
+      this.fingerTable.upsertEntry(this);
     }, config.heartBeatInterval);
 
+    setInterval(() => {
+      this.consoleTable.printFingerTable(this);
+    }, 1000);
+
     
-  setInterval(() => {this.consoleTable.printFingerTable(this)},1000);
+    this.communication.broadcast(MessageFactory.HeartBeatMessage(this));
   }
 
-  private gossip(message:MessageI){
-    this.communication.unicast(message,this.fingerTable.randomlyPickEntry());
-    this.communication.unicast(message,this.fingerTable.randomlyPickEntry());
+  private gossip(message: MessageI) {
+    message.gossip=true;
+    var destination = this.fingerTable.randomlyPickEntry(this,message.sender);
+    if(destination)
+      this.communication.unicast(message,destination );
   }
 
   private checkLeader() {
@@ -103,7 +142,7 @@ export class SelfSite extends Site implements SelfSiteI {
 
       if (entries.length > 0)
         this.communication.broadcast(MessageFactory.EllectionMessage(this));
-      else{ 
+      else {
         this.electionTimeOut = setTimeout(() => {
           this.lock.acquire();
           this.leader = true;
@@ -115,8 +154,6 @@ export class SelfSite extends Site implements SelfSiteI {
           this.lock.release();
         }, config.electionTimeout);
       }
-      
-     
     } else if (this.fingerTable.getLeader() && this.electionRunning) {
       this.electionRunning = false;
     }

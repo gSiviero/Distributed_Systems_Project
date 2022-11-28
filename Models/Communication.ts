@@ -18,6 +18,9 @@ export interface CommunicationEventsI {
   election: (message: MessageI) => void;
   coordinator: (message: MessageI) => void;
   gossip: (message: MessageI) => void;
+  queryResult: (message: MessageI) => void;
+  query: (message: MessageI) => void;
+  restoreDB: (message: MessageI) => void;
 }
 
 export class Communication
@@ -30,10 +33,11 @@ export class Communication
     super();
     this.udp = new UDP(listenOnPort, possiblePorts);
     var self = this;
-    this.infected = new LimitedList<string>(100);
+    this.infected = new LimitedList<string>(1000);
     this.udp.on("message", (m) => {
       if(this.infected.has(m.hash))
         return;
+      this.infected.input(m.hash);
       if(m.gossip){
         this.emit("gossip",m);
       }
@@ -50,6 +54,15 @@ export class Communication
         case "coordinator":
           this.emit("coordinator", m);
           break;
+        case "queryResult":
+          this.emit("queryResult", m);
+          break;
+        case "query":
+          this.emit("query", m);
+          break;
+        case "restoreDB":
+            this.emit("restoreDB", m);
+            break;
       }
     });
     this.udp.on("listening", () => self.emit("listening"));
@@ -70,5 +83,9 @@ export class Communication
 
   broadcast(message: MessageI) {
     this.udp.broadCast(message);
+  }
+
+  query(message: MessageI,destination: SiteI) {
+    this.udp.unicast(message,destination);
   }
 }

@@ -11,6 +11,8 @@
     "ip": "^1.1.8",
     "node-pty": "^0.10.1",
     "npm": "^9.1.2",
+    "readline-promise": "^1.0.5",
+    "simple-json-db": "^2.0.0",
     "socket.io": "^4.5.3",
     "socket.io-client": "^4.5.3",
     "term.js": "^0.0.7",

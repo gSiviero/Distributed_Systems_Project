@@ -30,6 +30,7 @@ export class FingerTableSite extends Site  implements FingerTableSiteI {
         this.timeStamp = site.timeStamp;
         this.leader = site.leader;
         this.clock = new Date();
+        this.client = site.client;
     }
 }
 
@@ -37,7 +38,7 @@ export interface FingerTableI{
     getEntries():SiteI[];
     upsertEntry(SiteI):void;
     getEntryById(id:number):FingerTableSiteI;
-    randomlyPickEntry():FingerTableSiteI;
+    randomlyPickEntry(site:SiteI,sender:SiteI):FingerTableSiteI;
     getEntriesWithGreaterId(id:number):FingerTableSiteI[];
     getEntriesWithSmallerId(id:number):FingerTableSiteI[];
     getLeader():(FingerTableSiteI | null);
@@ -79,8 +80,7 @@ export class FingerTable extends TypedEmitter<FingerTableEventsI> implements Fin
         if(entry == null){
             entry = new FingerTableSite(site);
             this.entries.push(entry);
-            if(entry.timeStamp == 1)
-                this.emit("join",entry);
+            this.emit("join",entry);
         }
         else if(site.timeStamp > entry.timeStamp){
             entry.updateTimeStamp(site);
@@ -128,17 +128,18 @@ export class FingerTable extends TypedEmitter<FingerTableEventsI> implements Fin
     }
 
     /**Randomly Pic a  */
-    randomlyPickEntry(): (FingerTableSiteI | null){
-        var index = Math.floor(Math.random() *this.entries.length);
-        return this.entries[index];
+    randomlyPickEntry(site:SiteI,sender:SiteI): (FingerTableSiteI | null){
+        var servers = this.entries.filter((e) => site.id != e.id && sender.id != e.id );
+        var index = Math.floor(Math.random() * servers.length);
+        return servers[index];
     }
 
     getEntriesWithSmallerId(id:number): FingerTableSiteI[]{
-        return this.entries.filter((n) => id  > n.id);
+        return this.entries.filter((n) => id  > n.id && !n.client);
     }
     
     getEntriesWithGreaterId(id:number): FingerTableSiteI[]{
-        return this.entries.filter((n) => id < n.id);
+        return this.entries.filter((n) => id < n.id && !n.client);
     }
 
     getLeader(): (FingerTableSiteI | null){

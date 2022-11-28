@@ -41,7 +41,7 @@ class Message implements MessageI{
 
 export class  MessageFactory{
     static HeartBeatMessage (sender:SelfSiteI):MessageI{
-        return new Message(sender.toJson(),"heartBeat",JSON.stringify(sender.fingerTable.getEntries()));
+        return new Message(sender.toJson(),"heartBeat",JSON.stringify(sender.fingerTable.getEntries()),true);
     }
 
     static FailureDetected (sender:SelfSiteI,failureId:number):MessageI{
@@ -54,5 +54,16 @@ export class  MessageFactory{
 
     static CoordinatorMessage (sender:SelfSiteI):MessageI{
         return new Message(sender.toJson(),"coordinator",null);
+    }
+
+    static QueryMessage (sender:SelfSiteI,query:string):MessageI{
+        return new Message(sender,"query",query);
+    }
+    static QueryResultMessage (sender:SelfSiteI,query:string):MessageI{
+        return new Message(sender.toJson(),"queryResult",query);
+    }
+
+    static RestoreDBMessage (sender:SelfSiteI,db:string):MessageI{
+        return new Message(sender.toJson(),"restoreDB",db);
     }
 }

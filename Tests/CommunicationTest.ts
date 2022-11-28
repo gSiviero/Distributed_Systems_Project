@@ -9,6 +9,7 @@ var message: MessageI = {
   topic: "heartBeat",
   payload: "payload",
   hash: "hash",
+  gossip:false,
 };
 describe("Communication Tests", () => {
   it("Should Instantiate a Connection Listening", (done) => {
