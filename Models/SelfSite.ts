@@ -43,13 +43,18 @@ export class SelfSite extends Site implements SelfSiteI {
     );
 
     this.db = new SimpleDB(this.port);
-    this.consoleTable = new ConsoleTable();
 
     this.communication.on("heartBeat", (s) => {
       this.fingerTable.upsertEntry(s.sender);
     });
 
-    this.fingerTable.on("failure", (d) => {
+   
+    this.communication.broadcast(MessageFactory.HeartBeatMessage(this));
+    console.log("AVISANDO");
+    setTimeout(()=> { 
+      
+      this.consoleTable = new ConsoleTable();
+      this.fingerTable.on("failure", (d) => {
       this.fingerTable.removeEntryById(d.id);
       this.consoleTable.log(`Failure Detected ${d.id}`);
       this.gossip(MessageFactory.FailureDetected(this, d.id));
@@ -111,7 +116,7 @@ export class SelfSite extends Site implements SelfSiteI {
     this.communication.on("gossip",(m) =>{ this.gossip(m) });
     
 
-    setInterval(() => {
+      setInterval(() => {
       this.timeStamp += 1;
       this.checkLeader();
       this.gossip(MessageFactory.HeartBeatMessage(this));
@@ -122,8 +127,10 @@ export class SelfSite extends Site implements SelfSiteI {
       this.consoleTable.printFingerTable(this);
     }, 1000);
 
+    },5000)
     
-    this.communication.broadcast(MessageFactory.HeartBeatMessage(this));
+
+
   }
 
   private gossip(message: MessageI) {
