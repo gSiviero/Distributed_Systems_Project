@@ -41,7 +41,7 @@ export class UDP extends TypedEmitter<UDPI> {
       var interval = setInterval(()=> {
         this.client.send(Buffer.from(JSON.stringify(message)), 8080,`10.0.16.${i}`);
         i++;
-        if(i == 50)
+        if(i >= 255)
           clearInterval(interval);
       },10)
   }
