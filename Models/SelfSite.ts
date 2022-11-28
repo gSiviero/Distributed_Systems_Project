@@ -141,7 +141,8 @@ export class SelfSite extends Site implements SelfSiteI {
       var entries = this.fingerTable.getEntriesWithGreaterId(this.id);
 
       if (entries.length > 0)
-        this.communication.broadcast(MessageFactory.EllectionMessage(this));
+        this.communication.multicast(MessageFactory.EllectionMessage(this),entries);
+
       else {
         this.electionTimeOut = setTimeout(() => {
           this.lock.acquire();
