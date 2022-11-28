@@ -32,7 +32,7 @@ export class UDP extends TypedEmitter<UDPI> {
     server.bind(serverPort, () => {
       server.setBroadcast(true);
       server.setMulticastTTL(128);
-      server.addMembership('230.185.192.108'); 
+      server.addMembership(config.multicastAddress); 
     });
     server.on("listening", () => this.emit("listening"));
     server.on("message", (d: string) => this.emit("message", JSON.parse(d)));
