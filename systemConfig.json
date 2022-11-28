@@ -2,6 +2,7 @@
     "declareFailure":3,
     "electionTimeout": 3000,
     "heartBeatInterval":100,
+    "multicastAddress":"233.252.0.5",
     "port":8080,
     "possiblePorts":[8080,8081,8082]
 }

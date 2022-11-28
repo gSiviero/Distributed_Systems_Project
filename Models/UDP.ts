@@ -2,6 +2,7 @@ import * as dgram from "dgram";
 import { MessageI } from "./Message";
 import { TypedEmitter } from "tiny-typed-emitter";
 import { SiteI } from "./Site";
+import * as config from "../systemConfig.json";
 
 /**Interface that defines UDP methods and events. */
 export interface UDPI {
@@ -39,14 +40,14 @@ export class UDP extends TypedEmitter<UDPI> {
     this.client.bind(() => {
       this.client.setBroadcast(true);
       this.client.setMulticastTTL(128); 
-      this.client.addMembership('230.185.192.108');
+      this.client.addMembership(config.multicastAddress);
     });
   }
 
   /**Broadcast to all IPs in the network listening on all Ports defined in this.possiblePorts */
   broadCast(message: MessageI) {
     this.possiblePorts.forEach((port =>{
-      this.client.send(Buffer.from(JSON.stringify(message)), port,`230.185.192.108`);
+      this.client.send(Buffer.from(JSON.stringify(message)), port,config.multicastAddress);
     }))
 
   }
