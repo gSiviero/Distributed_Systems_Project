@@ -29,19 +29,11 @@ export class UDP extends TypedEmitter<UDPI> {
     super();
     this.possiblePorts = possiblePorts;
     const server = dgram.createSocket("udp4");
-    server.bind(serverPort, () => {
-      server.setBroadcast(true);
-      server.setMulticastTTL(128);
-      server.addMembership(config.multicastAddress); 
-    });
+    server.bind(serverPort, () => {});
     server.on("listening", () => this.emit("listening"));
     server.on("message", (d: string) => this.emit("message", JSON.parse(d)));
     this.client = dgram.createSocket("udp4");
-    this.client.bind(() => {
-      this.client.setBroadcast(true);
-      this.client.setMulticastTTL(128); 
-      this.client.addMembership(config.multicastAddress);
-    });
+    this.client.bind();
   }
 
   /**Broadcast to all IPs in the network listening on all Ports defined in this.possiblePorts */
