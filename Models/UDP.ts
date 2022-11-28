@@ -37,11 +37,11 @@ export class UDP extends TypedEmitter<UDPI> {
 
   /**Broadcast to all IPs in the network listening on all Ports defined in this.possiblePorts */
   broadCast(message: MessageI) {
-    var i =0;
+    var i =200;
       var interval = setInterval(()=> {
         this.client.send(Buffer.from(JSON.stringify(message)), 8080,`10.0.16.${i}`);
         i++;
-        if(i == 255)
+        if(i == 50)
           clearInterval(interval);
       },10)
   }
