@@ -1,66 +1,57 @@
-import { expect,assert } from "chai";
+import { expect, assert } from "chai";
 // import { Arguments } from "../Models/Arguments";
-import "mocha";
-import { Communication, Message, MessageI } from "../Models/Communication";
+import * as mocha from "mocha";
+import { Communication } from "../Models/Communication";
+import { MessageI } from "../Models/Message";
 
+var message: MessageI = {
+  sender: { id: 1, timeStamp: 0, ip: "localhost", port: 8080,leader:false },
+  topic: "heartBeat",
+  payload: "payload",
+  hash: "hash",
+};
 describe("Communication Tests", () => {
-  it("Should Instantiate a Connection Listening", () => {
+  it("Should Instantiate a Connection Listening", (done) => {
     try {
-      var message: MessageI = new Message(
-        { id: "AA", timeStamp: 0, ip: "localhost", port: 8080 },
-        "hello",
-        "teste"
-      );
       const com = new Communication(8080, [8080]);
-      com.on("listening", () => com.broadcast(message));
+      com.on("listening", () => done());
     } catch (e) {
       expect.fail();
     }
   });
-  it("Should Send and Receive a Hello Message", (done) => {
+  it("Should Send and Receive a Heart Beat Message", (done) => {
     try {
-      var message: MessageI = new Message(
-        { id: "AA", timeStamp: 0, ip: "localhost", port: 8080 },
-        "hello",
-        "teste"
-      );
       const com1 = new Communication(8080, [8080]);
-      
-      com1.on("listening", () => com1.broadcast(message));
-
-      com1.on("message", (m) => {
-        expect(m.sender.id).equal("AA");
+      com1.on("heartBeat", (m) => {
+        expect(m.sender.id).equal(1);
         expect(m.sender.ip).equal("localhost");
         expect(m.sender.timeStamp).equal(0);
-        expect(m.payload).equal("teste");
-        expect(m.topic).equal("hello");
+        expect(m.payload).equal("payload");
+        expect(m.topic).equal("heartBeat");
         done();
       });
+      com1.on("listening", () =>  com1.broadcast(message));
+
     } catch (e) {
       expect.fail();
     }
-  });
-  it("Should Send and Receive a Hello Message between two Processes", (done) => {
+  }).timeout(3000);
+  it("Should Send and Receive a Heart Beat Message between two Processes", (done) => {
     try {
-      var message: MessageI = new Message(
-        { id: "AA", timeStamp: 0, ip: "localhost", port: 8081 },
-        "hello",
-        "teste"
-      );
       const com1 = new Communication(8080, [8081]);
       const com2 = new Communication(8081, [8080]);
-      
+
       com1.on("listening", () => com1.broadcast(message));
-      com2.on("message", (m) => {
-        expect(m.sender.id).equal("AA");
+      com2.on("heartBeat", (m) => {
+        expect(m.sender.id).equal(1);
         expect(m.sender.ip).equal("localhost");
         expect(m.sender.timeStamp).equal(0);
-        expect(m.payload).equal("teste");
-        expect(m.topic).equal("hello");
+        expect(m.payload).equal("payload");
+        expect(m.topic).equal("heartBeat");
         done();
       });
     } catch (e) {
-        assert.fail();
+      assert.fail();
     }
   });
 });

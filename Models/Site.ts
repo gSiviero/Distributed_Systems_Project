@@ -1,32 +1,37 @@
 import {Md5} from 'ts-md5';
 import { Base } from './Base';
-import { Communication } from './Communication';
-import { FingerTable } from './FingerTable';
-import * as config from "../systemConfig.json";
 
 
 export interface SiteI{
     ip:string;
-    id:string;
+    id:number;
     port:number;
     timeStamp:number;
+    leader:boolean;
 }
-/**Definition of a Site */
+
+
+/**Definition of a generic Site. It does not implement communication or fingertable. 
+ * For the Local Site use the class SelfSite.
+ */
 export class Site extends Base implements SiteI {
     /**Site's ip */
     ip:string;
     /**Sites Id in the Ring */
-    id: string;
+    id: number;
     /**Port number this service is running on site */
     port: number;
     /**Lamport TimeStamp */
     timeStamp:number;
     /**Is this site leader? */
-    leader:false;
-
-    communication:Communication;
+    leader:boolean;
+    /**Communication Class, usedto receive and send messages accross the network */
     
-    constructor (ip:string,port:number){
+    /** Instantiates a new Site.
+     * @param ip Site's IP
+     * @param port  Site's Port that the system is running
+     */
+    constructor (ip:string,port:number,id?:number,leader?:boolean){
         super();
         this.ip = ip;
         this.validateNotNull("ip");
@@ -34,15 +39,9 @@ export class Site extends Base implements SiteI {
         this.validateNotNull("port");
         this.validateObject();
         this.timeStamp = 0;
-        this.id = Md5.hashStr(ip + port.toString()).slice(-2);
+        this.leader = leader??false;
+        this.id = id ?? (parseInt(Md5.hashStr(ip + port.toString()),16)%255);
     }
-}
-
-export class SelfSite extends Site{
-    fingerTable:FingerTable;
-    constructor(ip:string,port:number){
-        super(ip,port);
-        this.fingerTable = new FingerTable(1);
-        this.communication = new Communication(port??config.port,config.possiblePorts);
-    }
+    
+    toJson =()=>({ip:this.ip,id:this.id,port:this.port,timeStamp:this.timeStamp,leader:this.leader});
 }
