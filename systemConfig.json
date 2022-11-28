@@ -1,7 +1,7 @@
 {
     "declareFailure":5,
     "electionTimeout": 5000,
-    "heartBeatInterval":100,
+    "heartBeatInterval":1000,
     "port":8080,
     "possiblePorts":[8080]
 }
