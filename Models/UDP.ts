@@ -46,7 +46,6 @@ export class UDP extends TypedEmitter<UDPI> {
 
   /**Broadcast to all IPs in the network listening on all Ports defined in this.possiblePorts */
   broadCast(message: any) {
-      console.log(`Multicasting to: ${config.multicastAddress} : ${config.port}`);
       this.client.send(Buffer.from(JSON.stringify(message)), config.port,config.multicastAddress);
   }
 
