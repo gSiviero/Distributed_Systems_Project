@@ -5,7 +5,7 @@ import { Communication } from "../Models/Communication";
 import { MessageI } from "../Models/Message";
 
 var message: MessageI = {
-  sender: { id: 1, timeStamp: 0, ip: "localhost", port: 8080,leader:false },
+  sender: { id: 1, timeStamp: 0, ip: "localhost", port: 8080,leader:false,client:false },
   topic: "heartBeat",
   payload: "payload",
   hash: "hash",

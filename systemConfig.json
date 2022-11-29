@@ -1,8 +1,9 @@
 {
-    "declareFailure":1,
-    "electionTimeout": 300,
+    "declareFailure":3,
+    "electionTimeout": 500,
     "heartBeatInterval":100,
     "multicastAddress":"239.0.0.1",
     "port":2000,
+    "serverPort":8080,
     "possiblePorts":[2000]
 }

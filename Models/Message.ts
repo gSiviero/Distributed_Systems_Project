@@ -13,11 +13,13 @@ export interface MessageI{
     /**Payload, to later be converted into a Json Object */
     payload:string;
     gossip:boolean;
+    timeStamps?:any;
 }
 
 /**Implementation of Message */
 class Message implements MessageI{
     hash: string;
+    timeStamps:any;
     sender: SiteI;
     topic: string;
     payload: string;
@@ -35,35 +37,50 @@ class Message implements MessageI{
         this.payload = payload;
         this.hash = Md5.hashStr(JSON.stringify(this));
         this.gossip = gossip??false;
+        this.timeStamps = {"a":10};
     }
 }
 
 
 export class  MessageFactory{
     static HeartBeatMessage (sender:SelfSiteI):MessageI{
-        return new Message(sender.toJson(),"heartBeat",JSON.stringify(sender.fingerTable.getEntries()),true);
+        var msg = new Message(sender.toJson(),"heartBeat",JSON.stringify(sender.fingerTable.getEntries()),true);
+        sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );
+        return msg
     }
 
     static FailureDetected (sender:SelfSiteI,failureId:number):MessageI{
-        return new Message(sender.toJson(),"failure",failureId.toString(),true);
+        var msg = new Message(sender.toJson(),"failure",failureId.toString(),true);
+        sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );  
+        return msg;
     }
 
     static EllectionMessage (sender:SelfSiteI):MessageI{
-        return new Message(sender.toJson(),"election",null);
+        var msg =  new Message(sender.toJson(),"election",null);
+        sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );    
+        return msg;
     }
 
     static CoordinatorMessage (sender:SelfSiteI):MessageI{
-        return new Message(sender.toJson(),"coordinator",null);
+        var msg =  new Message(sender.toJson(),"coordinator",null);
+        sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );    
+        return msg;
     }
 
     static QueryMessage (sender:SelfSiteI,query:string):MessageI{
-        return new Message(sender,"query",query);
+        var msg =  new Message(sender.toJson(),"query",query);
+        sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );   
+        return msg;
     }
     static QueryResultMessage (sender:SelfSiteI,query:string):MessageI{
-        return new Message(sender.toJson(),"queryResult",query);
+        var msg =  new Message(sender.toJson(),"queryResult",query);
+        sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );       
+        return msg;
     }
 
     static RestoreDBMessage (sender:SelfSiteI,db:string):MessageI{
-        return new Message(sender.toJson(),"restoreDB",db);
+        var msg =  new Message(sender.toJson(),"restoreDB",db);
+        sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );      
+        return msg;
     }
 }

@@ -7,6 +7,7 @@ export interface SiteI{
     id:number;
     client:boolean;
     port:number;
+    serverPort:number;
     timeStamp:number;
     leader:boolean;
 }
@@ -28,18 +29,20 @@ export class Site extends Base implements SiteI {
     leader:boolean;
 
     client:boolean;
+    serverPort:number;
     /**Communication Class, usedto receive and send messages accross the network */
     
     /** Instantiates a new Site.
      * @param ip Site's IP
      * @param port  Site's Port that the system is running
      */
-    constructor (ip:string,port:number,id?:number,leader?:boolean,client?:boolean){
+    constructor (ip:string,port:number,id?:number,leader?:boolean,client?:boolean,serverPort?:number){
         super();
         this.ip = ip;
         this.validateNotNull("ip");
         this.port = port;
         this.validateNotNull("port");
+        this.serverPort = serverPort;
         this.validateObject();
         this.timeStamp = 0;
         this.leader = leader??false;
@@ -47,5 +50,5 @@ export class Site extends Base implements SiteI {
         this.id = id ?? (parseInt(Md5.hashStr(ip + port.toString()),16)%255);
     }
     
-    toJson =()=>({ip:this.ip,id:this.id,port:this.port,timeStamp:this.timeStamp,leader:this.leader,client:this.client});
+    toJson =()=>({ip:this.ip,id:this.id,port:this.port,timeStamp:this.timeStamp,leader:this.leader,client:this.client,serverPort:this.serverPort});
 }

@@ -27,7 +27,7 @@ export class FingerTableSite extends Site  implements FingerTableSiteI {
     }
     
     updateTimeStamp(site:SiteI){
-        this.timeStamp = site.timeStamp;
+        this.timeStamp = site.timeStamp > this.timeStamp ? site.timeStamp : this.timeStamp;
         this.leader = site.leader;
         this.clock = new Date();
         this.client = site.client;
@@ -65,7 +65,7 @@ export class FingerTable extends TypedEmitter<FingerTableEventsI> implements Fin
     /**Return all Entries in the Finger Table
      * @return Array of Entries
     */
-    getEntries = ():SiteI[] => this.entries.map((e) =>  e.toJson());
+    getEntries = ():FingerTableSiteI[] => this.entries.map((e) =>  e as FingerTableSiteI);
 
     /**Insert or update an entry in the finger table.
      * 
@@ -82,9 +82,7 @@ export class FingerTable extends TypedEmitter<FingerTableEventsI> implements Fin
             this.entries.push(entry);
             this.emit("join",entry);
         }
-        else if(site.timeStamp > entry.timeStamp){
-            entry.updateTimeStamp(site);
-        }
+        entry.updateTimeStamp(site);
         this.sort();
         this.lock.release();
     }

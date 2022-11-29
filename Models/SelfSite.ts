@@ -6,6 +6,7 @@ import { MessageFactory, MessageI } from "./Message";
 import { Mutex } from "async-mutex";
 import { ConsoleTable } from "./Table";
 import { SimpleDB } from "../DataBase/SimpleDB";
+import * as chalk from "chalk";
 
 export interface SelfSiteI extends SiteI {
   communication: CommunicationI;
@@ -31,56 +32,65 @@ export class SelfSite extends Site implements SelfSiteI {
    * @param port Local Sites Port;
    */
   constructor(ip: string, port: number, id?: number) {
-    super(ip, port, id);
+    super(ip, port, id,false,false,config.serverPort);
     this.fingerTable = new FingerTable(config.declareFailure);
     this.fingerTable.upsertEntry(this as Site);
     this.infections = [];
     this.lock = new Mutex();
     this.electionRunning = false;
     this.communication = new Communication(
-      port ?? config.port,
-      config.possiblePorts
+      port ?? config.port, this.serverPort
     );
 
     this.db = new SimpleDB(this.port);
     this.consoleTable = new ConsoleTable();
 
+    this.communication.on("listening", () => {
     this.communication.on("heartBeat", (s) => {
       this.fingerTable.upsertEntry(s.sender);
     });
 
     this.fingerTable.on("failure", (d) => {
+      this.lock.acquire();
+      this.timeStamp += 1;
       this.fingerTable.removeEntryById(d.id);
-      this.consoleTable.log(`Failure Detected ${d.id}`);
+      this.consoleTable.log(chalk.underline.red(`Failure Detected ${d.id}`));
       this.gossip(MessageFactory.FailureDetected(this, d.id));
+      this.lock.release();
+      this.checkLeader();
     });
 
     this.communication.on("failure", (s) => {
+      this.timeStamp += 1;
       this.consoleTable.log(`Failure Detected By other Node ${s}`);
       this.fingerTable.removeEntryById(parseInt(s));
       this.checkLeader();
     });
 
+    this.communication.on("serverRuning",(d) => {
+    this.consoleTable.log(`Server is Running on Port ${d}`);});
+
+    this.communication.on("get",(id) => {
+      this.consoleTable.log(`Get ${id}`);
+      this.communication.reespond(this.db.get(id));
+    });
+  
+    this.communication.on("set",(value) => {
+      this.consoleTable.log(`Set ${value}`);
+      this.gossip(MessageFactory.QueryMessage(this,value))
+      this.communication.reespond(this.db.insert(value));
+    });
+
     this.communication.on("query", (s) => {
-      if(s.payload.indexOf("insert") || s.payload.indexOf("delete"))
-        this.gossip(s);
-      this.consoleTable.log(`Query: ${s.sender.id}  ${s.sender.client}`);
-      var result ="";
-      try {
-        var db = this.db;
-        result = eval(`${s.payload}`);
-        this.consoleTable.log(`Result: ${result}`);
-      } catch (e) {
-        this.consoleTable.log(e);
-        result = e.toString();
-      }
-      this.communication.broadcast(
-        MessageFactory.QueryResultMessage(this, result)
-      );
+      this.consoleTable.log(`Set (gossip) ${s.payload}`);
+      this.timeStamp +=1 ;
+      this.gossip(s);
+      this.db.insert(s.payload);
     });
 
     this.fingerTable.on("join", (d) => {
-      this.consoleTable.log(`Node Discovered ${d.id}`);
+      this.timeStamp += 1;
+      this.consoleTable.log(`Node Discovered : ${d.id}`);
       if(this.leader)
         this.communication.unicast(MessageFactory.RestoreDBMessage(this,this.db.getBkp()),d);
     });
@@ -92,8 +102,10 @@ export class SelfSite extends Site implements SelfSiteI {
     })
 
     this.communication.on("coordinator", (d) => {
+      this.consoleTable.log(chalk.bold.blue(`Leader Elected: ${d.sender.id}`));
       if (d.sender.id > this.id) {
         this.lock.acquire();
+        this.timeStamp += 1;
         this.leader = false;
         this.fingerTable.upsertEntry(this);
         this.fingerTable.upsertEntry(d.sender);
@@ -112,11 +124,14 @@ export class SelfSite extends Site implements SelfSiteI {
     
 
     setInterval(() => {
-      this.timeStamp += 1;
-      this.checkLeader();
       this.communication.broadcast(MessageFactory.HeartBeatMessage(this));
       this.fingerTable.upsertEntry(this);
     }, config.heartBeatInterval);
+
+    setInterval(() => {
+      this.checkLeader();
+    }, 3000);
+
 
     setInterval(() => {
       this.consoleTable.printFingerTable(this);
@@ -124,6 +139,7 @@ export class SelfSite extends Site implements SelfSiteI {
 
     
     this.communication.broadcast(MessageFactory.HeartBeatMessage(this));
+  });
   }
 
   private gossip(message: MessageI) {
@@ -134,30 +150,38 @@ export class SelfSite extends Site implements SelfSiteI {
   }
 
   private checkLeader() {
-    this.lock.acquire();
     if (!this.fingerTable.getLeader() && !this.electionRunning) {
+      this.consoleTable.log(chalk.bold.yellow("Calling Ellection!"));
+      
+      this.lock.acquire();
       this.timeStamp += 1;
       this.electionRunning = true;
       var entries = this.fingerTable.getEntriesWithGreaterId(this.id);
-
-      if (entries.length > 0)
+      this.lock.release();
+      
+      this.electionTimeOut = setTimeout(() => this.bully(), config.electionTimeout);
+      if (entries.length > 0){
         this.communication.multicast(MessageFactory.EllectionMessage(this),entries);
-
-      else {
-        this.electionTimeOut = setTimeout(() => {
-          this.lock.acquire();
-          this.leader = true;
-          var entries2 = this.fingerTable.getEntriesWithSmallerId(this.id);
-          this.communication.multicast(
-            MessageFactory.CoordinatorMessage(this),
-            entries2
-          );
-          this.lock.release();
-        }, config.electionTimeout);
       }
-    } else if (this.fingerTable.getLeader() && this.electionRunning) {
-      this.electionRunning = false;
-    }
+      if(entries.length == 0){
+        clearTimeout(this.electionTimeOut);
+        this.bully();
+      }
+        
+      }
+  }
+
+  bully(){
+    this.lock.acquire();
+    if(!this.fingerTable.getLeader()){
+    this.consoleTable.log(chalk.bold.red("I Should be the Leader!"));
+    this.leader = true;
+    var entries2 = this.fingerTable.getEntriesWithSmallerId(this.id);
+    this.communication.multicast(MessageFactory.CoordinatorMessage(this),entries2);
+  }
+  else{
+    this.consoleTable.log(chalk.bold.blue("Ok there is another Leader"));
+  }
     this.lock.release();
   }
 }

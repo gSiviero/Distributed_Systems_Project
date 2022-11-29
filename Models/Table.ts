@@ -20,21 +20,22 @@ export class ConsoleTable {
     var data = [
       [
         chalk.bold.red("SITE"),
+        chalk.bold.red("LAST HB"),
         chalk.bold.red("TIMESTAMP"),
         chalk.bold.red("LEADER"),
-        chalk.bold.red("CLIENT"),
       ],
     ];
     data = data.concat(
       site.fingerTable.getEntries().map((e) => {
-        return [e.id.toString(), e.timeStamp.toString(), e.leader ? "X" : "", e.client ? "X": ""];
+        return [e.id.toString(), e.clock.toLocaleTimeString(),e.timeStamp.toString(), e.leader ? "X" : ""];
       })
     );
     this.fingerTableBox.setData(data);
 
     var info = `ID:${chalk.yellow(site.id)} \n`;
     info += `IP:${chalk.yellow(site.ip)} \n`;
-    info += `Port: ${chalk.blue(site.port)} \n`;
+    info += `UDP Port: ${chalk.blue(site.port)} \n`;
+    info += `Server Port: ${chalk.blue(site.serverPort)} \n`;
     info += `TimeStamp: ${chalk.blue(site.timeStamp)} \n`;
     info += `Leader:${chalk.bold.red(site.fingerTable.getLeader().id)}\n`;
     info += `Sites:${site.fingerTable.getEntries().length}\n`;

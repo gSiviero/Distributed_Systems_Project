@@ -35,7 +35,7 @@ describe("Finger Table Test", () => {
     });
 
     it("Should not Instantiate FingerTable Element Correctly", () => {
-        const site = {"ip":null,"id":null,"port":null,"timeStamp":0,leader:false};
+        const site = {"ip":null,"id":null,"port":null,"timeStamp":0,leader:false,client:false,lastHeartBeat:new Date()};
         try{
             const fingerTableSite = new FingerTableSite(site);
             expect.fail();

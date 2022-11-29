@@ -23,11 +23,9 @@ export class UDP extends TypedEmitter<UDPI> {
   /**
    * Instantiates a new UDP service.
    * @param serverPort Listen on this port for connections
-   * @param possiblePorts Possible ports for nodes to operate
    */
-  constructor(serverPort: number, possiblePorts: number[]) {
+  constructor(serverPort: number) {
     super();
-    this.possiblePorts = possiblePorts;
     const server = dgram.createSocket("udp4");
     server.bind(serverPort, () => {
       server.setBroadcast(true);
