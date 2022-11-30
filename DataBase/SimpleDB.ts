@@ -10,8 +10,8 @@ export class SimpleDB{
     }
 
     insert(value:any):string{
-        var id = Md5.hashStr(`value ${Date()}`);
-        this.db.set(id, value);
+        var id = value.id == undefined ? Md5.hashStr(`value ${Date()}`) : value.id;
+        this.db.set(id, value.value);
         return id;
     }
 
@@ -20,7 +20,7 @@ export class SimpleDB{
     }
 
     get(id:string){
-        return this.db.get(id);
+        return this.db.get(id) ?? "Not Found";
     }
 
     delete(id:string){
@@ -28,7 +28,7 @@ export class SimpleDB{
             this.db.delete(id);
             return "Object Deleted"
         }
-        return "Id does not exists"
+        return "Not Found"
     }
 
     restore(bkp:string){

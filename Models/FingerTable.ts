@@ -19,7 +19,7 @@ export class FingerTableSite extends Site  implements FingerTableSiteI {
     /**Clock on the local machine when this Site was last updated.*/
     clock:Date;
     state:string;
-    lastFailure:Date;
+    
     constructor(site:SiteI){
         super(site.ip,site.port,site.id,site.leader);
         this.timeStamp = site.timeStamp;

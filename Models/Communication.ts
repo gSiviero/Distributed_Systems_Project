@@ -1,10 +1,10 @@
 import { TypedEmitter } from "tiny-typed-emitter";
+import { HTTP } from "./HTTP";
 import { LimitedList } from "./LimitedList";
 import { MessageI } from "./Message";
 import { SiteI } from "./Site";
 import { UDP } from "./UDP";
-import { Express, Request, Response } from 'express';
-const express = require("express");
+
 
 export interface CommunicationI {
   broadcast(message: MessageI): void;
@@ -26,6 +26,7 @@ export interface CommunicationEventsI {
   serverRuning: (port:number) => void;
   get: (query:string) => void;
   set: (query:string) => void;
+  delete: (query:string) => void;
 }
 
 export class Communication
@@ -34,28 +35,19 @@ export class Communication
 {
   udp: UDP;
   infected: LimitedList<string>;
-  http: Express;
+  http: HTTP;
   request:Response;
   constructor(listenOnPort: number,serveOnPort:number) {
     super();
     this.udp = new UDP(listenOnPort);
     var self = this;
     this.infected = new LimitedList<string>(1000);
-    this.http = express();
+    this.http = new HTTP(serveOnPort);
 
-    this.http.listen(serveOnPort,() =>{
-        this.emit("serverRuning",serveOnPort);
-    });
 
-    this.http.get('/', (req: Request, res: Response) => {
-      this.request = res;
-      this.emit("get",req.query.id as string);
-    });
-
-    this.http.get('/set', (req: Request, res: Response) => {
-      this.request = res;
-      this.emit("set",req.query.value as string);
-    });
+    this.http.on("set",(value) => this.emit("set",value));
+    this.http.on("get",(value) => this.emit("get",value));
+    this.http.on("delete",(value) => this.emit("delete",value));
 
     this.udp.on("message", (m) => {
       if(this.infected.has(m.hash))
@@ -112,8 +104,7 @@ export class Communication
     this.udp.unicast(message,destination);
   }
 
-  reespond(resp:string) {
-    this.request.send(resp);
-    // this.request = null;
+  respond(value:any){
+    this.http.respond(value);
   }
 }

@@ -72,13 +72,19 @@ export class SelfSite extends Site implements SelfSiteI {
 
     this.communication.on("get",(id) => {
       this.consoleTable.log(`Get ${id}`);
-      this.communication.reespond(this.db.get(id));
+      this.communication.respond(this.db.get(id));
     });
   
     this.communication.on("set",(value) => {
       this.consoleTable.log(`Set ${value}`);
       this.gossip(MessageFactory.QueryMessage(this,value))
-      this.communication.reespond(this.db.insert(value));
+      this.communication.respond(this.db.insert(value));
+    });
+
+    this.communication.on("delete",(value) => {
+      this.consoleTable.log(`Delete ${value}`);
+      this.gossip(MessageFactory.QueryMessage(this,value))
+      this.communication.respond(this.db.delete(value));
     });
 
     this.communication.on("query", (s) => {
