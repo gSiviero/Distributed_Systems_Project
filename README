@@ -55,4 +55,8 @@ curl --location --request DELETE 'http://localhost:8080' \
 --data-raw '{"id":"2"}'
 ```
 
+##Individual Contribution
+Giulliano Siviero -> Election (Bully Algorithm), TimeStamps and Presentation
+Harshinee Chitti -> Client Communication, Site to Site Communication
+Janaki -> Database Interface and AWS Infrastructure
 
