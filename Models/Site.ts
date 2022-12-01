@@ -1,7 +1,9 @@
 import {Md5} from 'ts-md5';
 import { Base } from './Base';
 
-
+/**
+ * Definition of a Site Interface
+ */
 export interface SiteI{
     ip:string;
     id:number;

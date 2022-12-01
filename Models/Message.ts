@@ -41,43 +41,74 @@ class Message implements MessageI{
     }
 }
 
-
+/**
+ * Message Factory, generates all different possible messages in the System.
+ */
 export class  MessageFactory{
+    /**
+     * Creates a HeartBeat message
+     * @param sender Site Sending the message
+     * @returns 
+     */
     static HeartBeatMessage (sender:SelfSiteI):MessageI{
         var msg = new Message(sender.toJson(),"heartBeat",JSON.stringify(sender.fingerTable.getEntries()),true);
         sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );
         return msg
     }
 
+    /**
+     * Creates a Failure Detection Message
+     * @param sender Site sending the message
+     * @param failureId Id of the Site that failed
+     * @returns 
+     */
     static FailureDetected (sender:SelfSiteI,failureId:number):MessageI{
         var msg = new Message(sender.toJson(),"failure",failureId.toString(),true);
         sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );  
         return msg;
     }
 
+
+    /**
+     * Creates a Election Detection Message
+     * @param sender Site sending the message
+     * @returns 
+     */
     static EllectionMessage (sender:SelfSiteI):MessageI{
         var msg =  new Message(sender.toJson(),"election",null);
         sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );    
         return msg;
     }
 
+    /**
+     * Creates a Coordinator Detection Message
+     * @param sender Site sending the message
+     * @returns 
+     */
     static CoordinatorMessage (sender:SelfSiteI):MessageI{
         var msg =  new Message(sender.toJson(),"coordinator",null);
         sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );    
         return msg;
     }
 
+    /**
+     * Creates a Query Detection Message
+     * @param sender Site sending the message
+     * @param query Query been sent
+     * @returns 
+     */
     static QueryMessage (sender:SelfSiteI,query:string):MessageI{
         var msg =  new Message(sender.toJson(),"query",query);
         sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );   
         return msg;
     }
-    static QueryResultMessage (sender:SelfSiteI,query:string):MessageI{
-        var msg =  new Message(sender.toJson(),"queryResult",query);
-        sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );       
-        return msg;
-    }
 
+    /**
+     * Creates a Restore DB message
+     * @param sender Site sending the message
+     * @param db String containing the DB data
+     * @returns 
+     */
     static RestoreDBMessage (sender:SelfSiteI,db:string):MessageI{
         var msg =  new Message(sender.toJson(),"restoreDB",db);
         sender.fingerTable.getEntries().forEach((e) => msg.timeStamps[e.id] =e.timeStamp );      

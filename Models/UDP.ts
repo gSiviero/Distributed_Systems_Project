@@ -42,11 +42,19 @@ export class UDP extends TypedEmitter<UDPI> {
     });
   }
 
-  /**Broadcast to all IPs in the network listening on all Ports defined in this.possiblePorts */
+   /**
+   * Sends a message to all sites in the network.
+   * @param message Message to be sent to all Sites in the Network
+   */
   broadCast(message: any) {
       this.client.send(Buffer.from(JSON.stringify(message)), config.port,config.multicastAddress);
   }
 
+  /**
+   * Sends a message to a single site in the network.
+   * @param message Message to be Sent
+   * @param destination Site that will receive this message.
+   */
   unicast(message: MessageI,destination:SiteI) {
     this.client.send(Buffer.from(JSON.stringify(message)), destination.port, destination.ip);
   }

@@ -1,7 +1,10 @@
+/**This class represents a list with unique values to be used in the gosspi protocol */
 export class LimitedList<T>{
-    /**Clock on the local machine when this Site was last updated.*/
+    /**Number of elements in the list*/
     inputs:number;
+    /**Array conetaining the elements*/
     array: T[];
+    /**Maximum size of the list */
     size:number;
     constructor(size:number){
         this.size = size;
@@ -9,27 +12,21 @@ export class LimitedList<T>{
         this.array = [];
     }
 
-    actualPosition(){
-        return this.inputs % this.size;
-    }
-    
-    input(element:T){
+    /**
+     * 
+     * @param element Element to be insert in the list
+     */
+    input(element:T):void{
         if(this.has(element))
             return;
-        this.array[this.actualPosition()] = element;
+        this.array[this.inputs % this.size] = element;
         this.inputs++;
     }
 
-    has(element:T){
-        return this.array.indexOf(element) != -1;
-    }
-
-    getOrdered(){
-        var ret = [];
-        for(var i = 0;i <this.size;i++){
-            if(this.array[(this.actualPosition() + i) % this.size])
-                ret.push(this.array[(this.actualPosition() + i) % this.size]);
-        }
-        return ret;
-    }
+    /**
+     * Checks if the element is already in the list
+     * @param element Element to be checked
+     * @returns True if the list already contains the element, false otherwise
+     */
+    has = (element:T):boolean => this.array.indexOf(element) != -1;
 }

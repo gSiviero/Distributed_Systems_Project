@@ -11,21 +11,25 @@ interface FingerTableEventsI {
     'ready': () => void;
   }
 
+/**Declaration of an Finger Table Site Entry Interface */
 export interface FingerTableSiteI extends SiteI{
     clock:Date;
 }
+
 /**This class describes an entry in the finger table*/
 export class FingerTableSite extends Site  implements FingerTableSiteI {
     /**Clock on the local machine when this Site was last updated.*/
     clock:Date;
-    state:string;
-    
+
     constructor(site:SiteI){
         super(site.ip,site.port,site.id,site.leader);
         this.timeStamp = site.timeStamp;
         this.clock = new Date();
     }
     
+    /**Updates properties of the FingerTable Site. 
+     * @param site Site containing the up to date states of the entry
+    */
     updateTimeStamp(site:SiteI){
         this.timeStamp = site.timeStamp > this.timeStamp ? site.timeStamp : this.timeStamp;
         this.leader = site.leader;
@@ -34,17 +38,9 @@ export class FingerTableSite extends Site  implements FingerTableSiteI {
     }
 }
 
-export interface FingerTableI{
-    getEntries():SiteI[];
-    upsertEntry(SiteI):void;
-    getEntryById(id:number):FingerTableSiteI;
-    randomlyPickEntry(site:SiteI,sender:SiteI):FingerTableSiteI;
-    getEntriesWithGreaterId(id:number):FingerTableSiteI[];
-    getEntriesWithSmallerId(id:number):FingerTableSiteI[];
-    getLeader():(FingerTableSiteI | null);
-}
+
 /**Finger Table implementation */
-export class FingerTable extends TypedEmitter<FingerTableEventsI> implements FingerTableI{
+export class FingerTable extends TypedEmitter<FingerTableEventsI>{
     /**Array of entries in the Finger table */
     private entries:FingerTableSite[];
     private secconds:number;
@@ -84,6 +80,7 @@ export class FingerTable extends TypedEmitter<FingerTableEventsI> implements Fin
         }
         entry.updateTimeStamp(site);
         this.sort();
+        this.setLeader(site);
         this.lock.release();
     }
 
@@ -99,9 +96,8 @@ export class FingerTable extends TypedEmitter<FingerTableEventsI> implements Fin
         timeCut.setSeconds(timeCut.getSeconds() - this.secconds);
         var listOfFailures = this.entries.filter((e) => e.clock < timeCut);
         this.entries = this.entries.filter((e) => e.clock > timeCut);
-        if(listOfFailures.length > 0){
+        if(listOfFailures.length > 0)
             listOfFailures.forEach((s) => this.emit("failure", s));
-        }
         this.sort();
         this.lock.release();
     }
@@ -125,27 +121,41 @@ export class FingerTable extends TypedEmitter<FingerTableEventsI> implements Fin
         this.lock.release();
     }
 
-    /**Randomly Pic a  */
+    /**Randomly Pic a  Site from the fingertable that is not it self or the sender of the original message.*/
     randomlyPickEntry(site:SiteI,sender:SiteI): (FingerTableSiteI | null){
         var servers = this.entries.filter((e) => site.id != e.id && sender.id != e.id );
         var index = Math.floor(Math.random() * servers.length);
         return servers[index];
     }
 
-    getEntriesWithSmallerId(id:number): FingerTableSiteI[]{
-        return this.entries.filter((n) => id  > n.id && !n.client);
-    }
-    
-    getEntriesWithGreaterId(id:number): FingerTableSiteI[]{
-        return this.entries.filter((n) => id < n.id && !n.client);
-    }
+    /**
+     * Returns a list of Sites that has smaller ids than the reference Id
+     * @param id Reference Id
+     * @returns List of Sites
+     */
+    getEntriesWithSmallerId = (id:number): FingerTableSiteI[] => this.entries.filter((n) => id  > n.id && !n.client);
 
+    /**
+     * Returns a list of Sites that has greater ids than the reference Id
+     * @param id Reference Id
+     * @returns List of Sites
+     */
+    getEntriesWithGreaterId = (id:number): FingerTableSiteI[] =>  this.entries.filter((n) => id < n.id && !n.client);
+
+    /**
+     * Returns the Leader Site
+     * @returns Site
+     */
     getLeader(): (FingerTableSiteI | null){
         var entries = this.entries.filter((n) => n.leader == true);
         return entries.length > 0 ? entries[0] : null;
     }
 
-    setLeader(site:SiteI){
+    /**
+     * Returns the Leader Site
+     * @returns Site
+     */
+    private setLeader(site:SiteI){
         this.entries.forEach((e) => {
             e.leader = site.id == e.id;
         })

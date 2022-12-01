@@ -2,16 +2,19 @@ import { SelfSite, SelfSiteI } from "./SelfSite";
 import * as chalk from "chalk";
 import * as blessed from "blessed";
 
-/**Definition of a generic Site. It does not implement communication or fingertable.
- * For the Local Site use the class SelfSite.
+/**
+ * Implementation of the Console Dashboard
  */
-
-export class ConsoleTable {
+export class ConsoleDashboard {
+  /**Screen object to be rendered */
   screen: blessed.screen;
+  /**Widget that displays the Site's INFO*/
   infoBox: blessed.box;
+  /**Widget with a logs console*/
   logsBox: blessed.log;
+  /**Widget display connected Sites*/
   fingerTableBox: blessed.box;
-  terminal: blessed.form;
+  
   constructor() {
     this.initiateScreen();
   }
