@@ -1,6 +1,6 @@
 # Distributed Database
 
-This is a project for the Distributed Systems cours
+This is a project for the Distributed Systems course at Santa Clara University.
 
 ## Installation
 To run this Project you will need to install [NodeJs] (https://nodejs.org/en/) :
