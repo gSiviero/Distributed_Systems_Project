@@ -1,9 +1,10 @@
 # Distributed Database
 
 This is a project for the Distributed Systems course at Santa Clara University.
-
+##Video Presentation of the Project
+🔗 [Youtube Video](https://www.youtube.com/watch?v=H14Zltv48rU)
 ## Installation
-To run this Project you will need to install [NodeJs] (https://nodejs.org/en/) :
+To run this Project you will need to install [NodeJs] (https://nodejs.org/en/) : 
 
 Also you will need to instal a typeScript executer
 ```bash
